@@ -25,14 +25,11 @@ WORKDIR /app
 COPY server ./server
 COPY package*.json ./
 
-# 安装生产依赖
-RUN npm install --production
+# 安装所有依赖（包括 socket.io）
+RUN npm install
 
 # 从构建阶段复制前端构建产物
 COPY --from=frontend-builder /app/dist ./dist
-
-# 安装 express（用于静态文件服务）
-RUN npm install express
 
 # 暴露端口
 EXPOSE 3001 8080
