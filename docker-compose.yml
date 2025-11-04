@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  minilpa-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minilpa-web
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    volumes:
+      # 如果需要持久化数据，可以挂载卷
+      - ./data:/app/data
+    networks:
+      - minilpa-network
+    # 如果需要访问物理读卡器设备
+    # devices:
+    #   - /dev/bus/usb:/dev/bus/usb
+    # privileged: true
+
+networks:
+  minilpa-network:
+    driver: bridge
+
