@@ -59,6 +59,12 @@ export default {
     autoRemoveNotification: '通知を自動削除',
     confirmDelete: '削除前に確認'
   },
+  online: {
+    users: 'オンライン',
+    tooltip: '現在のオンラインユーザー数',
+    connected: '接続済み',
+    disconnected: '接続解除'
+  },
   common: {
     confirm: '確認',
     cancel: 'キャンセル',

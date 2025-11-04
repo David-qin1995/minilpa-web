@@ -59,6 +59,12 @@ export default {
     autoRemoveNotification: '自动移除通知',
     confirmDelete: '删除前确认'
   },
+  online: {
+    users: '在线',
+    tooltip: '当前在线用户数量',
+    connected: '已连接',
+    disconnected: '连接断开'
+  },
   common: {
     confirm: '确认',
     cancel: '取消',

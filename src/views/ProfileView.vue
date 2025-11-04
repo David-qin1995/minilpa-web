@@ -94,12 +94,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useEsimStore } from '../stores/esim'
 import { useLanguageStore } from '../stores/language'
+import { useOnlineStore } from '../stores/online'
 
 const esimStore = useEsimStore()
 const langStore = useLanguageStore()
+const onlineStore = useOnlineStore()
 
 const activationCode = ref('')
 const searchQuery = ref('')
@@ -117,7 +119,20 @@ const filteredProfiles = computed(() => {
 
 onMounted(() => {
   refreshProfiles()
+  
+  // 监听其他用户的操作
+  window.addEventListener('profile-changed', handleProfileChanged)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('profile-changed', handleProfileChanged)
+})
+
+function handleProfileChanged(event) {
+  console.log('检测到其他用户的操作:', event.detail)
+  // 刷新 profile 列表
+  refreshProfiles()
+}
 
 async function refreshProfiles() {
   try {
@@ -132,6 +147,8 @@ async function downloadProfile() {
   
   try {
     await esimStore.downloadProfile(activationCode.value)
+    // 广播操作给其他用户
+    onlineStore.emitProfileAction('download', { activationCode: activationCode.value })
     activationCode.value = ''
     alert(langStore.t('message.downloadSuccess'))
   } catch (error) {
@@ -142,6 +159,8 @@ async function downloadProfile() {
 async function enableProfile(iccid) {
   try {
     await esimStore.enableProfile(iccid)
+    // 广播操作给其他用户
+    onlineStore.emitProfileAction('enable', { iccid })
     alert(langStore.t('message.enableSuccess'))
   } catch (error) {
     alert(langStore.t('common.error'))
@@ -151,6 +170,8 @@ async function enableProfile(iccid) {
 async function disableProfile(iccid) {
   try {
     await esimStore.disableProfile(iccid)
+    // 广播操作给其他用户
+    onlineStore.emitProfileAction('disable', { iccid })
     alert(langStore.t('message.disableSuccess'))
   } catch (error) {
     alert(langStore.t('common.error'))
@@ -162,6 +183,8 @@ async function deleteProfile(iccid) {
   
   try {
     await esimStore.deleteProfile(iccid)
+    // 广播操作给其他用户
+    onlineStore.emitProfileAction('delete', { iccid })
     alert(langStore.t('message.deleteSuccess'))
   } catch (error) {
     alert(langStore.t('common.error'))

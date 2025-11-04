@@ -59,6 +59,12 @@ export default {
     autoRemoveNotification: 'Auto Remove Notification',
     confirmDelete: 'Confirm Before Delete'
   },
+  online: {
+    users: 'Online',
+    tooltip: 'Current online users',
+    connected: 'Connected',
+    disconnected: 'Disconnected'
+  },
   common: {
     confirm: 'Confirm',
     cancel: 'Cancel',
