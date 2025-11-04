@@ -33,23 +33,10 @@ export const useOnlineStore = defineStore('online', () => {
       isConnected.value = true
     })
     
-    // 接收在线人数更新
+    // 接收在线人数更新（按 IP 统计）
     socket.on('online-count', (count) => {
-      console.log('在线人数更新:', count)
+      console.log('在线人数更新:', count, '(按 IP 统计)')
       onlineCount.value = count
-    })
-    
-    // 接收配置更新
-    socket.on('config-updated', (data) => {
-      console.log('配置已更新:', data)
-      // 可以触发页面刷新或显示通知
-    })
-    
-    // 接收 profile 变更
-    socket.on('profile-changed', (data) => {
-      console.log('Profile 已变更:', data)
-      // 触发 profile 列表刷新
-      window.dispatchEvent(new CustomEvent('profile-changed', { detail: data }))
     })
     
     // 断开连接
@@ -73,27 +60,11 @@ export const useOnlineStore = defineStore('online', () => {
     }
   }
   
-  // 发送配置变更
-  const emitConfigChange = (data) => {
-    if (socket?.connected) {
-      socket.emit('config-change', data)
-    }
-  }
-  
-  // 发送 profile 操作
-  const emitProfileAction = (action, profile) => {
-    if (socket?.connected) {
-      socket.emit('profile-action', { action, profile, timestamp: Date.now() })
-    }
-  }
-  
   return {
     onlineCount,
     isConnected,
     connect,
-    disconnect,
-    emitConfigChange,
-    emitProfileAction
+    disconnect
   }
 })
 

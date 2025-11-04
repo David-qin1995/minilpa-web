@@ -18,38 +18,63 @@ const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3001
 
-// 在线用户管理
-let onlineUsers = new Set()
+// 在线用户管理（按 IP 统计）
+const onlineUsers = new Map() // Map<ip, Set<socketId>>
+
+// 获取客户端真实 IP
+function getClientIP(socket) {
+  // 优先从 x-forwarded-for 获取（通过代理/负载均衡时）
+  const forwarded = socket.handshake.headers['x-forwarded-for']
+  if (forwarded) {
+    return forwarded.split(',')[0].trim()
+  }
+  // 从 x-real-ip 获取
+  const realIP = socket.handshake.headers['x-real-ip']
+  if (realIP) {
+    return realIP
+  }
+  // 直接连接的 IP
+  return socket.handshake.address
+}
 
 // Socket.io 连接处理
 io.on('connection', (socket) => {
-  // 用户上线
-  onlineUsers.add(socket.id)
-  console.log(`用户 ${socket.id} 已连接，当前在线人数: ${onlineUsers.size}`)
+  // 获取客户端 IP
+  const clientIP = getClientIP(socket)
   
-  // 广播在线人数
-  io.emit('online-count', onlineUsers.size)
+  // 添加到在线用户
+  if (!onlineUsers.has(clientIP)) {
+    onlineUsers.set(clientIP, new Set())
+  }
+  onlineUsers.get(clientIP).add(socket.id)
   
-  // 监听配置变更
-  socket.on('config-change', (data) => {
-    console.log('配置变更:', data)
-    // 广播给其他用户
-    socket.broadcast.emit('config-updated', data)
-  })
+  // 统计在线 IP 数量
+  const onlineCount = onlineUsers.size
   
-  // 监听 profile 操作
-  socket.on('profile-action', (data) => {
-    console.log('Profile 操作:', data)
-    // 广播给所有用户
-    io.emit('profile-changed', data)
-  })
+  console.log(`用户连接 [IP: ${clientIP}] [Socket: ${socket.id}]`)
+  console.log(`当前在线人数: ${onlineCount} (按 IP 统计)`)
+  
+  // 广播在线人数（按 IP 统计）
+  io.emit('online-count', onlineCount)
   
   // 用户断开连接
   socket.on('disconnect', () => {
-    onlineUsers.delete(socket.id)
-    console.log(`用户 ${socket.id} 已断开，当前在线人数: ${onlineUsers.size}`)
+    // 从该 IP 的连接集合中移除
+    if (onlineUsers.has(clientIP)) {
+      onlineUsers.get(clientIP).delete(socket.id)
+      
+      // 如果该 IP 没有任何连接了，移除该 IP
+      if (onlineUsers.get(clientIP).size === 0) {
+        onlineUsers.delete(clientIP)
+      }
+    }
+    
+    const onlineCount = onlineUsers.size
+    console.log(`用户断开 [IP: ${clientIP}] [Socket: ${socket.id}]`)
+    console.log(`当前在线人数: ${onlineCount} (按 IP 统计)`)
+    
     // 广播在线人数
-    io.emit('online-count', onlineUsers.size)
+    io.emit('online-count', onlineCount)
   })
 })
 
